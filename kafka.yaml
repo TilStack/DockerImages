@@ -1,0 +1,73 @@
+version: "3.9"
+services:
+  zookeeper:
+    restart: unless-stopped
+    container_name: "zookeeper"
+    image: confluentinc/cp-zookeeper:7.5.1
+    networks:
+      - tacko-cluster
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 200
+  kafka-1:
+    restart: unless-stopped
+    container_name: "kafka-1"
+    hostname: kafka-1
+    image: confluentinc/cp-kafka:7.5.1
+    depends_on:
+      - zookeeper
+    networks:
+      - tacko-cluster
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 2
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 2
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: EXTERNAL://localhost:29092,INTERNAL://kafka-1:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+  kafka-2:
+    restart: unless-stopped
+    container_name: "kafka-2"
+    hostname: kafka-2
+    image: confluentinc/cp-kafka:7.5.1
+    depends_on:
+      - zookeeper
+    networks:
+      - tacko-cluster
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 2
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 2
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: EXTERNAL://localhost:39092,INTERNAL://kafka-2:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+  kafka-ui:
+    restart: unless-stopped
+    container_name: "kafka-ui"
+    image: provectuslabs/kafka-ui:latest
+    depends_on:
+      - kafka-1
+      - kafka-2
+    ports:
+      - "8088:8080"
+    networks:
+      - tacko-cluster
+    environment:
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-1:9092,kafka-2:9092
+      DYNAMIC_CONFIG_ENABLED: 'true'
+      AUTH_TYPE: "LOGIN_FORM"
+      SPRING_SECURITY_USER_NAME: leonel.kahameni@tacko.cm
+      SPRING_SECURITY_USER_PASSWORD: 4tr7PePNJ931tuN7
+networks:
+  tacko-cluster:
+    driver: bridge
+    name: "tacko-cluster"
+

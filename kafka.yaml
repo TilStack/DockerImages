@@ -70,4 +70,4 @@ services:
 networks:
   tacko-cluster:
     driver: bridge
-    name: "tacko-cluster"
+    name: "tacko-cluster"""
